@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?
+  role          String    @default("admin")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  company       Company?
+  sessions      Session[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Company {
+  id         String     @id @default(cuid())
+  name       String
+  industry   String
+  country    String     @default("US")
+  fiscalYear Int        @default(2024)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  userId     String     @unique
+  user       User       @relation(fields: [userId], references: [id])
+  suppliers  Supplier[]
+  spendRows  SpendRow[]
+  reports    Report[]
+}
+
+model Supplier {
+  id          String     @id @default(cuid())
+  name        String
+  email       String?
+  category    String
+  country     String     @default("US")
+  status      String     @default("pending")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  companyId   String
+  company     Company    @relation(fields: [companyId], references: [id])
+  spendRows   SpendRow[]
+}
+
+model SpendRow {
+  id           String    @id @default(cuid())
+  supplierName String
+  category     String
+  spendAmount  Float
+  currency     String    @default("USD")
+  year         Int       @default(2024)
+  tco2e        Float?
+  confidence   String?
+  createdAt    DateTime  @default(now())
+  companyId    String
+  supplierId   String?
+  company      Company   @relation(fields: [companyId], references: [id])
+  supplier     Supplier? @relation(fields: [supplierId], references: [id])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  type       String
+  year       Int
+  status     String   @default("draft")
+  totalTco2e Float?
+  createdAt  DateTime @default(now())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+}

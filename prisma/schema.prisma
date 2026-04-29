@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -40,6 +40,10 @@ model Company {
   suppliers  Supplier[]
   spendRows  SpendRow[]
   reports    Report[]
+  auditLogs  AuditLog[]
+  plan        String   @default("free")
+billingEmail String?
+trialEndsAt DateTime?
 }
 
 model Supplier {
@@ -78,6 +82,17 @@ model Report {
   year       Int
   status     String   @default("draft")
   totalTco2e Float?
+  createdAt  DateTime @default(now())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+}
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  entity     String
+  entityId   String
+  details    String?
+  userId     String
   createdAt  DateTime @default(now())
   companyId  String
   company    Company  @relation(fields: [companyId], references: [id])
